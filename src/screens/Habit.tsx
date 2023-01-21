@@ -9,6 +9,7 @@ import { Loading } from "../components/Loading";
 import { api } from "../lib/axios";
 import { generateProgressPercentage } from '../utils/generate-progress-percentage';
 import { HabitsEmpty } from "../components/HabitsEmpty";
+import clsx from "clsx";
 
 interface Params {
   date: string;
@@ -32,6 +33,7 @@ export function Habit() {
   const [ dayInfo, setDayInfo ] = useState<DayInfoProps | null>(null);
   const [ completedHabits, setCompletedHabits] = useState<string[]>([]); 
   const habitsProgress = dayInfo?.possibleHabits.length ? generateProgressPercentage(dayInfo.possibleHabits.length, completedHabits.length) : 0
+  const isDateInPast = parsedDate.endOf('day').isBefore(new Date());
 
   async function fetchHabits() {
     try {
@@ -81,18 +83,26 @@ export function Habit() {
           {dayAndMonth}
         </Text>
         <ProgressBar progress={habitsProgress} />
-        <View className="mt-6">
+        <View className={clsx("mt-6", {
+          ['opacity-50']: isDateInPast
+        })}>
           { dayInfo?.possibleHabits ? dayInfo.possibleHabits.map((habit) => (
             <Checkbox 
               key={habit.id}
               title={habit.title}
               checked={completedHabits.includes(habit.id)}
+              disabled={isDateInPast}
               onPress={() => handleToggleHabit(habit.id)}
             />
           ))
           : <HabitsEmpty />
         }
         </View>
+        { isDateInPast && (
+          <Text className="text-white mt-10 text-center">
+            Você não pode editar hábitos de uma data passada.
+          </Text>
+        ) }
       </ScrollView>
     </View>
   )
